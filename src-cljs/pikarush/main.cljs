@@ -9,11 +9,11 @@
    [goog.date.Date :as Date]
    [goog.date.DateRange :as DateRange]
    [goog.i18n.DateTimeFormat :as DateTimeFormat]
-   [goog.i18n.DateTimeParse :as DateTimeParse]
-   [pikarush.events :refer [events]]))
+   [goog.i18n.DateTimeParse :as DateTimeParse]))
 
-(def start-date (goog/date.Date. 2013 7 31))
-(def end-date   (goog/date.Date. 2013 8 7))
+;; evil dates have zero-indexed months
+(def start-date (goog/date.Date. 2014 1 1))
+(def end-date   (goog/date.Date. 2014 1 5))
 (def rush-dates (goog/date.DateRange. start-date end-date))
 
 (defn vecify
@@ -54,8 +54,6 @@
 (def time-formatter (goog.i18n.DateTimeFormat. "hh:mma"))
 (def dt-parser (goog.i18n.DateTimeParse. "MM/dd hh:mm"))
 
-(def events-by-date (group-by :date events))
-
 ;; there's a bug in google closure that makes
 ;; goog.date.Date objects invalid inputs as
 ;; the third argument for DateTimeParse.parse
@@ -65,12 +63,12 @@
     (.parse dt-parser dt-str date-obj)
     date-obj))
 
-(deftemplate event-list []
+(deftemplate event-list [events-by-date]
   (let [rush-days (remaining-rush-days)]
     [:div
       (if (empty? rush-days)
         [:h3 "Rush is over. Hope you had a blast! "
-             "Feel free to stop by pika, regardless."]
+             "Feel free to stop by pika regardless."]
         [:ul#dates.pure-paginator
          (for [day rush-days]
           [:li
@@ -112,9 +110,9 @@
   (fn [e]
     (toggle-class! elem "active")))
 
-(defn render-events []
+(defn render-events [events-by-date]
   (dommy/set-html! (sel1 :#event-list)
-                   (dommy/html (event-list)))
+                   (dommy/html (event-list events-by-date)))
 
   (doseq [elem (sel ".event")]
     (dommy/listen! elem :click (toggle-event-descr elem))))
@@ -130,14 +128,18 @@
 
 (def photo-elem (sel1 :#random-photo))
 
-(add-watch now :re-render
- (fn [k r o n]
-   (render-events)
-   (dommy/set-attr! photo-elem "src"
-                    (str "photos/" (rand-nth photos) ".jpg"))))
+(defn init [events]
+  (let [events-by-date (group-by :date events)]
+    (add-watch now :re-render
+     (fn [k r o n]
+         (render-events events-by-date)
+         (dommy/set-attr! photo-elem "src"
+                          (str "photos/" (rand-nth photos) ".jpg")))))
 
-;; update the schedule every thirty minutes
-(js/setInterval tick! (* 1000 60 30))
+  ;; update the schedule every thirty minutes
+  (js/setInterval tick! (* 1000 60 30))
 
-;; here we go
-(tick!)
+  ;; here we go
+  (tick!))
+
+(GET "events/spring2014.edn" {:handler init :format :edn})
