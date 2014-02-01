@@ -9,28 +9,31 @@
   (map (fn [n] (Integer. n))
        v))
 
-(def events (read-string (slurp "events/spring2014.edn")))
+(def now "spring2014")
+(def events (read-string (slurp (str "events/" now ".edn"))))
 
-(defn ical-event [event]
+(defn ical-events [events]
   (with-out-str
     (ical/write-object
-     (let [year 2014
-           [month day]               (map-to-int (str/split (:date event) #"/"))
-           [start-hour start-minute] (map-to-int (str/split (nth (:time event) 0) #":"))
-           [end-hour end-minute]     (map-to-int (str/split (nth (:time event) 1) #":"))]
-       [:vcalendar
-         [:vevent
-           [:summary (:name event)]
-           [:description (:description event)]
-           ;; ha, hard coding
-           [:dtstart (org.joda.time.DateTime. 2014 month day start-hour start-minute)]
-           [:dtend   (org.joda.time.DateTime. 2014 month day end-hour end-minute)]]]))))
+     (vec
+      (concat
+       [:vcalendar]
 
+       (for [event events]
+         (let [year 2014
+               [month day]               (map-to-int (str/split (:date event) #"/"))
+               [start-hour start-minute] (map-to-int (str/split (nth (:time event) 0) #":"))
+               [end-hour end-minute]     (map-to-int (str/split (nth (:time event) 1) #":"))]
+             [:vevent
+               [:summary (:name event)]
+               [:description (:description event)]
+               ;; ha, hard coding
+               [:dtstart (org.joda.time.DateTime. 2014 month day start-hour start-minute)]
+               [:dtend   (org.joda.time.DateTime. 2014 month day end-hour end-minute)]])))))))
 
-(defn make-calendars [events]
-  (doseq [i (range (count events))]
-    (spit (str "events/cals/" i ".ics")
-          (ical-event (nth events i)))))
+(defn make-calendar [events]
+  (spit (str "events/cals/" now ".ics")
+        (ical-events events)))
 
 (defn wiki-text [events]
   (let [events-by-date (group-by :date events)
@@ -47,5 +50,7 @@
 
 
 (defn -main []
-  (make-calendars events)
+  (make-calendar events)
   (spit "events.mw" (wiki-text events)))
+
+(-main)
