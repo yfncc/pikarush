@@ -13,7 +13,7 @@
 
 ;; evil dates have zero-indexed months
 (def start-date (goog/date.Date. 2014 1 1))
-(def end-date   (goog/date.Date. 2014 1 5))
+(def end-date   (goog/date.Date. 2014 1 6))
 (def rush-dates (goog/date.DateRange. start-date end-date))
 
 (defn vecify

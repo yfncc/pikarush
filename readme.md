@@ -10,7 +10,7 @@ You are done. That was awesome.
 
 If you want to mix things up, look at the guts of:
 
-1. `src/pikarush/calendar.clj` to change how calendars/wiki text is emitted.
+1. `src/pikarush/export.clj` to change how calendars/wiki text is emitted.
 2. `src-cljs/pikarush/main.cljs` to mess with the website script!
 
 Calendar events are output to `events/cals`.
